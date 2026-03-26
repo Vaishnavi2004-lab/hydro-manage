@@ -10,6 +10,9 @@ import Batches from "./pages/Batches";
 import Slots from "./pages/Slots";
 import Revenue from "./pages/Revenue";
 import Reports from "./pages/Reports";
+import DocumentVerification from "./pages/DocumentVerification";
+import MembershipPlans from "./pages/MembershipPlans";
+import RenewalTracking from "./pages/RenewalTracking";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -26,6 +29,9 @@ const App = () => (
             <Route path="/members" element={<Members />} />
             <Route path="/batches" element={<Batches />} />
             <Route path="/slots" element={<Slots />} />
+            <Route path="/documents" element={<DocumentVerification />} />
+            <Route path="/plans" element={<MembershipPlans />} />
+            <Route path="/renewals" element={<RenewalTracking />} />
             <Route path="/revenue" element={<Revenue />} />
             <Route path="/reports" element={<Reports />} />
             <Route path="*" element={<NotFound />} />

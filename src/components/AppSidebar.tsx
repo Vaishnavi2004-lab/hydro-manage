@@ -6,6 +6,9 @@ import {
   TrendingUp,
   FileBarChart,
   Waves,
+  FileCheck,
+  Crown,
+  RefreshCw,
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
@@ -25,8 +28,11 @@ import {
 const navItems = [
   { title: "Dashboard", url: "/", icon: LayoutDashboard },
   { title: "Member Registration", url: "/members", icon: UserPlus },
+  { title: "Document Verification", url: "/documents", icon: FileCheck },
+  { title: "Membership Plans", url: "/plans", icon: Crown },
   { title: "Batch Time Table", url: "/batches", icon: Clock },
   { title: "Slot Booking", url: "/slots", icon: CalendarCheck },
+  { title: "Renewal Tracking", url: "/renewals", icon: RefreshCw },
   { title: "Revenue Analytics", url: "/revenue", icon: TrendingUp },
   { title: "Reports", url: "/reports", icon: FileBarChart },
 ];
