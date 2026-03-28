@@ -9,6 +9,10 @@ import {
   FileCheck,
   Crown,
   RefreshCw,
+  ClipboardCheck,
+  IndianRupee,
+  UserCog,
+  Droplets,
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
@@ -28,13 +32,17 @@ import {
 const navItems = [
   { title: "Dashboard", url: "/", icon: LayoutDashboard },
   { title: "Member Registration", url: "/members", icon: UserPlus },
+  { title: "Attendance Entry", url: "/attendance", icon: ClipboardCheck },
+  { title: "Fee Payment", url: "/payments", icon: IndianRupee },
   { title: "Document Verification", url: "/documents", icon: FileCheck },
   { title: "Membership Plans", url: "/plans", icon: Crown },
   { title: "Batch Time Table", url: "/batches", icon: Clock },
   { title: "Slot Booking", url: "/slots", icon: CalendarCheck },
+  { title: "Staff Management", url: "/staff", icon: UserCog },
+  { title: "Water Quality", url: "/water-quality", icon: Droplets },
   { title: "Renewal Tracking", url: "/renewals", icon: RefreshCw },
   { title: "Revenue Analytics", url: "/revenue", icon: TrendingUp },
-  { title: "Reports", url: "/reports", icon: FileBarChart },
+  { title: "Reports & Analytics", url: "/reports", icon: FileBarChart },
 ];
 
 export function AppSidebar() {
@@ -51,8 +59,8 @@ export function AppSidebar() {
           </div>
           {!collapsed && (
             <div className="animate-slide-in">
-              <p className="text-sm font-semibold text-foreground leading-tight">AquaAdmin</p>
-              <p className="text-xs text-muted-foreground">Pool Management</p>
+              <p className="text-sm font-semibold text-foreground leading-tight">CSMC Pool</p>
+              <p className="text-xs text-muted-foreground">Smart City Initiative</p>
             </div>
           )}
         </div>
