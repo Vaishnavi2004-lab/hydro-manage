@@ -1,4 +1,4 @@
-import { Users, Activity, DollarSign, Clock, RefreshCw, CalendarCheck, AlertTriangle, Wrench, Lightbulb, FileText, ArrowRight } from "lucide-react";
+import { Users, Activity, DollarSign, Droplets, RefreshCw, CalendarCheck, AlertTriangle, Wrench, Lightbulb, FileText, ArrowRight } from "lucide-react";
 import { KpiCard } from "@/components/KpiCard";
 import { Badge } from "@/components/ui/badge";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, PieChart, Pie, Cell } from "recharts";
@@ -89,12 +89,12 @@ export default function Dashboard() {
 
       {/* KPI Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
-        <KpiCard title="Total Registrations" value="1,247" change="12% this month" changeType="up" icon={Users} />
-        <KpiCard title="Pool Utilization" value="78%" change="5% vs last week" changeType="up" icon={Activity} accentColor="bg-info/15" />
+        <KpiCard title="Total Members" value="1,247" change="12% this month" changeType="up" icon={Users} />
+        <KpiCard title="Active Members" value="1,089" change="87% active rate" changeType="up" icon={Activity} accentColor="bg-info/15" />
         <KpiCard title="Monthly Revenue" value="₹6.8L" change="8% growth" changeType="up" icon={DollarSign} accentColor="bg-success/15" />
-        <KpiCard title="Pending Approvals" value="23" change="3 urgent" changeType="down" icon={Clock} accentColor="bg-warning/15" />
-        <KpiCard title="Renewals Due" value="47" change="This week" changeType="neutral" icon={RefreshCw} accentColor="bg-destructive/15" />
-        <KpiCard title="Available Slots" value="156" change="Today" changeType="neutral" icon={CalendarCheck} />
+        <KpiCard title="Today Attendance" value="312" change="vs 285 yesterday" changeType="up" icon={CalendarCheck} accentColor="bg-warning/15" />
+        <KpiCard title="Water Quality" value="Normal" change="pH 7.3 • Cl 2.5" changeType="neutral" icon={Droplets} accentColor="bg-primary/15" />
+        <KpiCard title="Upcoming Renewals" value="47" change="12 overdue" changeType="down" icon={RefreshCw} accentColor="bg-destructive/15" />
       </div>
 
       {/* Quick Insights */}
