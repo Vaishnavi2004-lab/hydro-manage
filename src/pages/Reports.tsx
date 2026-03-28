@@ -1,56 +1,149 @@
-import { FileBarChart, Download, Calendar, FileText, Users, TrendingUp } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { useMemo } from "react";
+import { FileBarChart, Users, TrendingUp, CalendarCheck, Droplets, IndianRupee, AlertTriangle } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, PieChart, Pie, Cell } from "recharts";
+import { useAppData } from "@/context/AppContext";
 
-const reports = [
-  { name: "Monthly Revenue Report", type: "Financial", date: "Mar 2026", status: "Ready", icon: TrendingUp },
-  { name: "Member Registration Summary", type: "Membership", date: "Mar 2026", status: "Ready", icon: Users },
-  { name: "Pool Utilization Report", type: "Operations", date: "Mar 2026", status: "Generating", icon: FileBarChart },
-  { name: "Batch Attendance Report", type: "Operations", date: "Feb 2026", status: "Ready", icon: Calendar },
-  { name: "Annual Financial Statement", type: "Financial", date: "FY 2025-26", status: "Ready", icon: FileText },
-  { name: "Coach Performance Report", type: "HR", date: "Q1 2026", status: "Ready", icon: Users },
-  { name: "Maintenance Log Report", type: "Operations", date: "Mar 2026", status: "Ready", icon: FileBarChart },
-  { name: "Revenue Forecast", type: "Financial", date: "Q2 2026", status: "Pending", icon: TrendingUp },
-];
-
-const statusStyle = (s: string) => s === "Ready" ? "bg-success/15 text-success" : s === "Generating" ? "bg-warning/15 text-warning" : "bg-secondary text-muted-foreground";
+const COLORS = ["hsl(174, 72%, 50%)", "hsl(210, 80%, 58%)", "hsl(280, 60%, 60%)", "hsl(38, 92%, 55%)", "hsl(152, 60%, 48%)"];
+const tooltipStyle = { background: "hsl(220, 18%, 13%)", border: "1px solid hsl(220, 14%, 20%)", borderRadius: 8, color: "hsl(210, 20%, 92%)" };
 
 export default function Reports() {
+  const { members, attendance, payments, waterEntries } = useAppData();
+
+  const membersByPlan = useMemo(() => {
+    const counts: Record<string, number> = {};
+    members.forEach(m => { counts[m.plan] = (counts[m.plan] || 0) + 1; });
+    return Object.entries(counts).map(([name, value]) => ({ name, value }));
+  }, [members]);
+
+  const revenueByMonth = useMemo(() => {
+    const months: Record<string, number> = {};
+    payments.filter(p => p.status === "Paid").forEach(p => {
+      const m = p.date.slice(0, 7);
+      months[m] = (months[m] || 0) + p.amount;
+    });
+    return Object.entries(months).sort().map(([month, revenue]) => ({ month: month.slice(5), revenue }));
+  }, [payments]);
+
+  const attendanceByDate = useMemo(() => {
+    const dates: Record<string, { present: number; absent: number; late: number }> = {};
+    attendance.forEach(a => {
+      if (!dates[a.date]) dates[a.date] = { present: 0, absent: 0, late: 0 };
+      if (a.status === "Present") dates[a.date].present++;
+      else if (a.status === "Absent") dates[a.date].absent++;
+      else dates[a.date].late++;
+    });
+    return Object.entries(dates).sort().map(([date, v]) => ({ date: date.slice(5), ...v }));
+  }, [attendance]);
+
+  const waterTrend = useMemo(() => {
+    return [...waterEntries].reverse().map(e => ({
+      date: e.date.slice(5),
+      ph: parseFloat(e.ph),
+      chlorine: parseFloat(e.chlorine),
+      temp: parseFloat(e.temp),
+    }));
+  }, [waterEntries]);
+
+  const totalRevenue = payments.filter(p => p.status === "Paid").reduce((s, p) => s + p.amount, 0);
+  const pendingPayments = payments.filter(p => p.status !== "Paid").length;
+  const activeMembers = members.filter(m => m.status === "Active").length;
+  const todayAttendance = attendance.filter(a => a.date === "2026-03-28" && a.status === "Present").length;
+
   return (
     <div className="space-y-6 animate-fade-in">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-foreground">Reports</h1>
-          <p className="text-sm text-muted-foreground mt-1">Generate and download system reports</p>
-        </div>
-        <Button className="gap-2"><FileBarChart className="h-4 w-4" /> Generate Report</Button>
+      <div>
+        <h1 className="text-2xl font-bold text-foreground">Reports & Analytics</h1>
+        <p className="text-sm text-muted-foreground mt-1">Comprehensive insights derived from real-time data</p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {reports.map((r, i) => (
-          <div key={i} className="glass-card p-5 flex items-start gap-4 hover:glow-border transition-all duration-300">
-            <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
-              <r.icon className="h-5 w-5 text-primary" />
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        {[
+          { icon: Users, label: "Total Members", value: String(members.length), color: "text-primary" },
+          { icon: IndianRupee, label: "Total Revenue", value: `₹${totalRevenue.toLocaleString()}`, color: "text-success" },
+          { icon: CalendarCheck, label: "Today Present", value: String(todayAttendance), color: "text-info" },
+          { icon: AlertTriangle, label: "Pending Payments", value: String(pendingPayments), color: "text-warning" },
+        ].map(c => (
+          <div key={c.label} className="glass-card p-4">
+            <div className="flex items-center gap-2 mb-1">
+              <c.icon className={`h-4 w-4 ${c.color}`} />
+              <span className="text-xs text-muted-foreground uppercase tracking-wider">{c.label}</span>
             </div>
-            <div className="flex-1 min-w-0">
-              <div className="flex items-start justify-between gap-2">
-                <div>
-                  <h3 className="font-medium text-foreground text-sm">{r.name}</h3>
-                  <div className="flex items-center gap-2 mt-1">
-                    <Badge variant="secondary" className="text-xs">{r.type}</Badge>
-                    <span className="text-xs text-muted-foreground">{r.date}</span>
-                  </div>
-                </div>
-                <span className={`inline-flex px-2 py-0.5 rounded-full text-xs font-medium shrink-0 ${statusStyle(r.status)}`}>{r.status}</span>
-              </div>
-              {r.status === "Ready" && (
-                <Button variant="ghost" size="sm" className="mt-2 gap-1.5 text-xs text-primary hover:text-primary">
-                  <Download className="h-3 w-3" /> Download
-                </Button>
-              )}
-            </div>
+            <p className="text-xl font-bold text-foreground">{c.value}</p>
           </div>
         ))}
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <div className="glass-card p-5">
+          <h3 className="text-sm font-semibold text-foreground mb-4 flex items-center gap-2">
+            <TrendingUp className="h-4 w-4 text-primary" />Revenue Analytics
+          </h3>
+          <ResponsiveContainer width="100%" height={240}>
+            <BarChart data={revenueByMonth}>
+              <CartesianGrid strokeDasharray="3 3" stroke="hsl(220, 14%, 20%)" />
+              <XAxis dataKey="month" tick={{ fill: "hsl(215, 12%, 55%)", fontSize: 12 }} axisLine={false} />
+              <YAxis tick={{ fill: "hsl(215, 12%, 55%)", fontSize: 12 }} axisLine={false} />
+              <Tooltip contentStyle={tooltipStyle} />
+              <Bar dataKey="revenue" fill="hsl(174, 72%, 50%)" radius={[4, 4, 0, 0]} />
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
+
+        <div className="glass-card p-5">
+          <h3 className="text-sm font-semibold text-foreground mb-4 flex items-center gap-2">
+            <Users className="h-4 w-4 text-primary" />Membership Distribution
+          </h3>
+          <ResponsiveContainer width="100%" height={200}>
+            <PieChart>
+              <Pie data={membersByPlan} cx="50%" cy="50%" innerRadius={50} outerRadius={80} paddingAngle={4} dataKey="value">
+                {membersByPlan.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
+              </Pie>
+              <Tooltip contentStyle={tooltipStyle} />
+            </PieChart>
+          </ResponsiveContainer>
+          <div className="flex flex-wrap gap-3 mt-2 justify-center">
+            {membersByPlan.map((d, i) => (
+              <div key={d.name} className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                <span className="h-2.5 w-2.5 rounded-full" style={{ background: COLORS[i % COLORS.length] }} />{d.name} ({d.value})
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="glass-card p-5">
+          <h3 className="text-sm font-semibold text-foreground mb-4 flex items-center gap-2">
+            <CalendarCheck className="h-4 w-4 text-primary" />Attendance Trends
+          </h3>
+          <ResponsiveContainer width="100%" height={240}>
+            <BarChart data={attendanceByDate}>
+              <CartesianGrid strokeDasharray="3 3" stroke="hsl(220, 14%, 20%)" />
+              <XAxis dataKey="date" tick={{ fill: "hsl(215, 12%, 55%)", fontSize: 12 }} axisLine={false} />
+              <YAxis tick={{ fill: "hsl(215, 12%, 55%)", fontSize: 12 }} axisLine={false} />
+              <Tooltip contentStyle={tooltipStyle} />
+              <Bar dataKey="present" fill="hsl(152, 60%, 48%)" radius={[4, 4, 0, 0]} name="Present" />
+              <Bar dataKey="absent" fill="hsl(0, 72%, 55%)" radius={[4, 4, 0, 0]} name="Absent" />
+              <Bar dataKey="late" fill="hsl(38, 92%, 55%)" radius={[4, 4, 0, 0]} name="Late" />
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
+
+        <div className="glass-card p-5">
+          <h3 className="text-sm font-semibold text-foreground mb-4 flex items-center gap-2">
+            <Droplets className="h-4 w-4 text-primary" />Water Quality Trends
+          </h3>
+          <ResponsiveContainer width="100%" height={240}>
+            <LineChart data={waterTrend}>
+              <CartesianGrid strokeDasharray="3 3" stroke="hsl(220, 14%, 20%)" />
+              <XAxis dataKey="date" tick={{ fill: "hsl(215, 12%, 55%)", fontSize: 12 }} axisLine={false} />
+              <YAxis tick={{ fill: "hsl(215, 12%, 55%)", fontSize: 12 }} axisLine={false} />
+              <Tooltip contentStyle={tooltipStyle} />
+              <Line type="monotone" dataKey="ph" stroke="hsl(174, 72%, 50%)" strokeWidth={2} name="pH" />
+              <Line type="monotone" dataKey="chlorine" stroke="hsl(210, 80%, 58%)" strokeWidth={2} name="Chlorine" />
+              <Line type="monotone" dataKey="temp" stroke="hsl(38, 92%, 55%)" strokeWidth={2} name="Temp" />
+            </LineChart>
+          </ResponsiveContainer>
+        </div>
       </div>
     </div>
   );
