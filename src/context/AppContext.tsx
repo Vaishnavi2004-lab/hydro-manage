@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, ReactNode } from "react";
+import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback } from "react";
 
 export interface Member {
   id: string;
@@ -132,88 +132,121 @@ const initialWater: WaterEntry[] = [
   { id: "W005", date: "2026-03-24", ph: "7.1", chlorine: "2.4", temp: "27", cleaning: "Completed", remarks: "Normal" },
 ];
 
+const STORAGE_KEYS = {
+  members: "sspm_members",
+  attendance: "sspm_attendance",
+  payments: "sspm_payments",
+  staff: "sspm_staff",
+  water: "sspm_water",
+  counters: "sspm_counters",
+} as const;
+
+function loadFromStorage<T>(key: string, fallback: T): T {
+  try {
+    const data = localStorage.getItem(key);
+    return data ? JSON.parse(data) : fallback;
+  } catch {
+    return fallback;
+  }
+}
+
+function saveToStorage(key: string, value: unknown) {
+  try {
+    localStorage.setItem(key, JSON.stringify(value));
+  } catch { /* storage full — silently ignore */ }
+}
+
+const defaultCounters = { member: 9, attendance: 8, payment: 8, staff: 8, water: 6 };
+
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
-let counter = { member: 9, attendance: 8, payment: 8, staff: 8, water: 6 };
-
 export function AppProvider({ children }: { children: ReactNode }) {
-  const [members, setMembers] = useState<Member[]>(initialMembers);
-  const [attendance, setAttendance] = useState<AttendanceRecord[]>(initialAttendance);
-  const [payments, setPayments] = useState<Payment[]>(initialPayments);
-  const [staffList, setStaffList] = useState<Staff[]>(initialStaff);
-  const [waterEntries, setWaterEntries] = useState<WaterEntry[]>(initialWater);
+  const [members, setMembers] = useState<Member[]>(() => loadFromStorage(STORAGE_KEYS.members, initialMembers));
+  const [attendance, setAttendance] = useState<AttendanceRecord[]>(() => loadFromStorage(STORAGE_KEYS.attendance, initialAttendance));
+  const [payments, setPayments] = useState<Payment[]>(() => loadFromStorage(STORAGE_KEYS.payments, initialPayments));
+  const [staffList, setStaffList] = useState<Staff[]>(() => loadFromStorage(STORAGE_KEYS.staff, initialStaff));
+  const [waterEntries, setWaterEntries] = useState<WaterEntry[]>(() => loadFromStorage(STORAGE_KEYS.water, initialWater));
+  const [counters, setCounters] = useState(() => loadFromStorage(STORAGE_KEYS.counters, defaultCounters));
   const [activityLog, setActivityLog] = useState<ActivityLog[]>([]);
 
-  const pushActivity = (name: string, action: string) => {
+  // Persist to localStorage on every change
+  useEffect(() => { saveToStorage(STORAGE_KEYS.members, members); }, [members]);
+  useEffect(() => { saveToStorage(STORAGE_KEYS.attendance, attendance); }, [attendance]);
+  useEffect(() => { saveToStorage(STORAGE_KEYS.payments, payments); }, [payments]);
+  useEffect(() => { saveToStorage(STORAGE_KEYS.staff, staffList); }, [staffList]);
+  useEffect(() => { saveToStorage(STORAGE_KEYS.water, waterEntries); }, [waterEntries]);
+  useEffect(() => { saveToStorage(STORAGE_KEYS.counters, counters); }, [counters]);
+
+  const pushActivity = useCallback((name: string, action: string) => {
     setActivityLog(prev => [{ name, action, time: "Just now" }, ...prev.slice(0, 19)]);
-  };
+  }, []);
 
-  const nextMemberId = () => `M${String(counter.member).padStart(3, "0")}`;
-  const nextPaymentId = () => `PAY-${String(counter.payment).padStart(3, "0")}`;
-  const nextStaffId = () => `S${String(counter.staff).padStart(3, "0")}`;
+  const nextMemberId = useCallback(() => `M${String(counters.member).padStart(3, "0")}`, [counters.member]);
+  const nextPaymentId = useCallback(() => `PAY-${String(counters.payment).padStart(3, "0")}`, [counters.payment]);
+  const nextStaffId = useCallback(() => `S${String(counters.staff).padStart(3, "0")}`, [counters.staff]);
 
-  const addMember = (m: Omit<Member, "id">) => {
-    const id = nextMemberId();
-    counter.member++;
+  const addMember = useCallback((m: Omit<Member, "id">) => {
+    const id = `M${String(counters.member).padStart(3, "0")}`;
+    setCounters(c => ({ ...c, member: c.member + 1 }));
     setMembers(prev => [...prev, { ...m, id }]);
     pushActivity(m.name, "New Registration");
-  };
+  }, [counters.member, pushActivity]);
 
-  const updateMember = (id: string, updates: Partial<Member>) => {
+  const updateMember = useCallback((id: string, updates: Partial<Member>) => {
     setMembers(prev => prev.map(m => m.id === id ? { ...m, ...updates } : m));
-  };
+  }, []);
 
-  const deleteMember = (id: string) => {
+  const deleteMember = useCallback((id: string) => {
     setMembers(prev => prev.filter(m => m.id !== id));
-  };
+  }, []);
 
-  const addAttendance = (a: Omit<AttendanceRecord, "id">) => {
-    const id = `A${String(counter.attendance).padStart(3, "0")}`;
-    counter.attendance++;
+  const addAttendance = useCallback((a: Omit<AttendanceRecord, "id">) => {
+    const id = `A${String(counters.attendance).padStart(3, "0")}`;
+    setCounters(c => ({ ...c, attendance: c.attendance + 1 }));
     setAttendance(prev => [...prev, { ...a, id }]);
     pushActivity(a.name, `Attendance: ${a.status}`);
-  };
+  }, [counters.attendance, pushActivity]);
 
-  const deleteAttendance = (id: string) => {
+  const deleteAttendance = useCallback((id: string) => {
     setAttendance(prev => prev.filter(a => a.id !== id));
-  };
+  }, []);
 
-  const addPayment = (p: Omit<Payment, "id">) => {
-    const id = nextPaymentId();
-    counter.payment++;
+  const addPayment = useCallback((p: Omit<Payment, "id">) => {
+    const id = `PAY-${String(counters.payment).padStart(3, "0")}`;
+    setCounters(c => ({ ...c, payment: c.payment + 1 }));
     setPayments(prev => [...prev, { ...p, id }]);
     pushActivity(p.name, `Payment ₹${p.amount.toLocaleString()} – ${p.status}`);
-  };
+  }, [counters.payment, pushActivity]);
 
-  const deletePayment = (id: string) => {
+  const deletePayment = useCallback((id: string) => {
     setPayments(prev => prev.filter(p => p.id !== id));
-  };
+  }, []);
 
-  const addStaff = (s: Omit<Staff, "id">) => {
-    const id = nextStaffId();
-    counter.staff++;
+  const addStaff = useCallback((s: Omit<Staff, "id">) => {
+    const id = `S${String(counters.staff).padStart(3, "0")}`;
+    setCounters(c => ({ ...c, staff: c.staff + 1 }));
     setStaffList(prev => [...prev, { ...s, id }]);
     pushActivity(s.name, "Staff Added");
-  };
+  }, [counters.staff, pushActivity]);
 
-  const updateStaff = (id: string, updates: Partial<Staff>) => {
+  const updateStaff = useCallback((id: string, updates: Partial<Staff>) => {
     setStaffList(prev => prev.map(s => s.id === id ? { ...s, ...updates } : s));
-  };
+  }, []);
 
-  const deleteStaff = (id: string) => {
+  const deleteStaff = useCallback((id: string) => {
     setStaffList(prev => prev.filter(s => s.id !== id));
-  };
+  }, []);
 
-  const addWaterEntry = (w: Omit<WaterEntry, "id">) => {
-    const id = `W${String(counter.water).padStart(3, "0")}`;
-    counter.water++;
+  const addWaterEntry = useCallback((w: Omit<WaterEntry, "id">) => {
+    const id = `W${String(counters.water).padStart(3, "0")}`;
+    setCounters(c => ({ ...c, water: c.water + 1 }));
     setWaterEntries(prev => [{ ...w, id }, ...prev]);
     pushActivity("System", "Water Quality Entry Added");
-  };
+  }, [counters.water, pushActivity]);
 
-  const deleteWaterEntry = (id: string) => {
+  const deleteWaterEntry = useCallback((id: string) => {
     setWaterEntries(prev => prev.filter(w => w.id !== id));
-  };
+  }, []);
 
   return (
     <AppContext.Provider value={{

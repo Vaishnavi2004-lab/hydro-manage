@@ -25,7 +25,19 @@ import NotFound from "./pages/NotFound";
 const queryClient = new QueryClient();
 
 const App = () => {
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(() => {
+    return localStorage.getItem("sspm_logged_in") === "true";
+  });
+
+  const handleLogin = () => {
+    localStorage.setItem("sspm_logged_in", "true");
+    setIsLoggedIn(true);
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem("sspm_logged_in");
+    setIsLoggedIn(false);
+  };
 
   if (!isLoggedIn) {
     return (
@@ -33,7 +45,7 @@ const App = () => {
         <TooltipProvider>
           <Toaster />
           <Sonner />
-          <Login onLogin={() => setIsLoggedIn(true)} />
+          <Login onLogin={handleLogin} />
         </TooltipProvider>
       </QueryClientProvider>
     );
@@ -46,7 +58,7 @@ const App = () => {
         <Sonner />
         <AppProvider>
           <BrowserRouter>
-            <DashboardLayout>
+            <DashboardLayout onLogout={handleLogout}>
               <Routes>
                 <Route path="/" element={<Index />} />
                 <Route path="/members" element={<Members />} />
