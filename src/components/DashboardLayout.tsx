@@ -1,8 +1,14 @@
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
-import { Bell, Search } from "lucide-react";
+import { Bell, Search, LogOut } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
-export function DashboardLayout({ children }: { children: React.ReactNode }) {
+interface DashboardLayoutProps {
+  children: React.ReactNode;
+  onLogout: () => void;
+}
+
+export function DashboardLayout({ children, onLogout }: DashboardLayoutProps) {
   return (
     <SidebarProvider>
       <div className="min-h-screen flex w-full">
@@ -19,7 +25,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
                 />
               </div>
             </div>
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2">
               <button className="relative p-2 rounded-lg hover:bg-secondary transition-colors">
                 <Bell className="h-4 w-4 text-muted-foreground" />
                 <span className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-primary" />
@@ -27,6 +33,15 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
               <div className="h-8 w-8 rounded-full bg-primary/20 flex items-center justify-center text-xs font-semibold text-primary">
                 AD
               </div>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="gap-1.5 text-muted-foreground hover:text-destructive ml-1"
+                onClick={onLogout}
+              >
+                <LogOut className="h-4 w-4" />
+                <span className="hidden sm:inline text-xs">Logout</span>
+              </Button>
             </div>
           </header>
           <main className="flex-1 overflow-auto p-4 md:p-6">{children}</main>
