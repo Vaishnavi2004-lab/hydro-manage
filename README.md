@@ -1,3 +1,15 @@
-# Welcome to your Lovable project
+# Hydro Manage
 
-TODO: Document your project here
+Hydro Manage is a smart water management system designed to monitor and manage water-related information efficiently.
+
+## Features
+- Water data monitoring
+- User-friendly dashboard
+- Responsive design
+- Data management system
+
+## Technologies Used
+- HTML
+- CSS
+- JavaScript
+- Python
