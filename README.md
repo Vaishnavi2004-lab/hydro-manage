@@ -13,3 +13,5 @@ Hydro Manage is a smart water management system designed to monitor and manage w
 - CSS
 - JavaScript
 - Python
+
+- link -https://euphonious-faloodeh-198167.netlify.app/
